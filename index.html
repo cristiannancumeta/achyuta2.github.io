@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Pixel Add to Cart Test</title>
+    <title>Meta Pixel Event Test Page</title>
 
     <!-- Meta Pixel Code -->
     <script>
@@ -24,10 +24,19 @@
              src="https://www.facebook.com/tr?id=48002403850441&ev=PageView&noscript=1" />
     </noscript>
     <!-- End Meta Pixel Code -->
+
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 40rem; }
+        button { padding: .6rem 1rem; margin: .25rem .25rem 0 0; cursor: pointer; }
+        #log { font-family: monospace; font-size: .85rem; background: #f5f6f7;
+               border: 1px solid #dddfe2; padding: .75rem; margin-top: 1rem;
+               min-height: 4rem; white-space: pre-wrap; }
+    </style>
 </head>
 
 <body>
-    <h1>Meta Pixel Add to Cart Test</h1>
+    <h1>Meta Pixel Event Test Page</h1>
+    <p>Pixel ID: <code>48002403850441</code></p>
 
     <form id="userDetailsForm">
         <label for="name">Name:</label>
@@ -41,40 +50,44 @@
 
         <button type="button" id="addToCartButton">Add to Cart</button>
         <button type="button" id="addToWishlistButton">Add to Wishlist</button>
+        <button type="button" id="purchaseButton">Purchase</button>
     </form>
 
-    <p id="status" style="font-family:monospace;color:#1877f2;"></p>
+    <div id="log">Waiting for events…</div>
 
     <script>
-        function logFired(eventName) {
-            document.getElementById('status').textContent =
-                'Fired: ' + eventName + ' at ' + new Date().toLocaleTimeString();
-            console.log('[pixel] fired', eventName);
+        var logEl = document.getElementById('log');
+
+        function logFired(eventName, params) {
+            var line = new Date().toLocaleTimeString() + '  ' + eventName +
+                       '  ' + JSON.stringify(params);
+            logEl.textContent = line + String.fromCharCode(10) + logEl.textContent;
+            console.log('[pixel]', eventName, params);
         }
 
-        document.getElementById('addToCartButton').addEventListener('click', function () {
-            fbq('track', 'AddToCart', {
-                content_name: 'Test Product',
-                content_category: 'Example Category',
-                content_ids: ['1234'],
-                content_type: 'product',
-                value: 50.00,
-                currency: 'USD'
-            });
-            logFired('AddToCart');
-        });
+        var baseParams = {
+            content_name: 'Test Product',
+            content_category: 'Example Category',
+            content_ids: ['1234'],
+            content_type: 'product',
+            value: 50.00,
+            currency: 'USD'
+        };
 
-        document.getElementById('addToWishlistButton').addEventListener('click', function () {
-            fbq('track', 'AddToWishlist', {
-                content_name: 'Test Product',
-                content_category: 'Example Category',
-                content_ids: ['1234'],
-                content_type: 'product',
-                value: 50.00,
-                currency: 'USD'
-            });
-            logFired('AddToWishlist');
-        });
+        function fire(eventName, extra) {
+            var params = Object.assign({}, baseParams, extra || {});
+            fbq('track', eventName, params);
+            logFired(eventName, params);
+        }
+
+        document.getElementById('addToCartButton')
+            .addEventListener('click', function () { fire('AddToCart'); });
+
+        document.getElementById('addToWishlistButton')
+            .addEventListener('click', function () { fire('AddToWishlist'); });
+
+        document.getElementById('purchaseButton')
+            .addEventListener('click', function () { fire('Purchase', { num_items: 1 }); });
     </script>
 </body>
 </html>
