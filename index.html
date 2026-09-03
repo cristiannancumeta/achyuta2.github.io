@@ -26,17 +26,20 @@
     <!-- End Meta Pixel Code -->
 
     <style>
-        body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 40rem; }
+        body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 44rem; }
         button { padding: .6rem 1rem; margin: .25rem .25rem 0 0; cursor: pointer; }
-        #log { font-family: monospace; font-size: .85rem; background: #f5f6f7;
+        #log { font-family: monospace; font-size: .8rem; background: #f5f6f7;
                border: 1px solid #dddfe2; padding: .75rem; margin-top: 1rem;
-               min-height: 4rem; white-space: pre-wrap; }
+               min-height: 5rem; max-height: 20rem; overflow: auto;
+               white-space: pre-wrap; }
+        #health { font-family: monospace; font-size: .85rem; margin-top: .5rem; }
     </style>
 </head>
 
 <body>
     <h1>Meta Pixel Event Test Page</h1>
     <p>Pixel ID: <code>48002403850441</code></p>
+    <div id="health">Checking pixel library…</div>
 
     <form id="userDetailsForm">
         <label for="name">Name:</label>
@@ -57,12 +60,23 @@
 
     <script>
         var logEl = document.getElementById('log');
+        var NL = String.fromCharCode(10);
 
-        function logFired(eventName, params) {
+        function logFired(eventName, params, opts) {
             var line = new Date().toLocaleTimeString() + '  ' + eventName +
-                       '  ' + JSON.stringify(params);
-            logEl.textContent = line + String.fromCharCode(10) + logEl.textContent;
-            console.log('[pixel]', eventName, params);
+                       (opts && opts.eventID ? '  [eventID ' + opts.eventID + ']' : '') +
+                       NL + '    ' + JSON.stringify(params);
+            logEl.textContent = line + NL + logEl.textContent;
+            console.log('[pixel]', eventName, params, opts || '');
+        }
+
+        function uid(prefix) {
+            return prefix + '-' + Date.now() + '-' +
+                   Math.random().toString(36).slice(2, 8);
+        }
+
+        function randomValue() {
+            return Math.round((10 + Math.random() * 90) * 100) / 100;
         }
 
         var baseParams = {
@@ -70,24 +84,55 @@
             content_category: 'Example Category',
             content_ids: ['1234'],
             content_type: 'product',
-            value: 50.00,
             currency: 'USD'
         };
 
-        function fire(eventName, extra) {
+        function fire(eventName, extra, opts) {
             var params = Object.assign({}, baseParams, extra || {});
-            fbq('track', eventName, params);
-            logFired(eventName, params);
+            if (opts) {
+                fbq('track', eventName, params, opts);
+            } else {
+                fbq('track', eventName, params);
+            }
+            logFired(eventName, params, opts);
         }
 
         document.getElementById('addToCartButton')
-            .addEventListener('click', function () { fire('AddToCart'); });
+            .addEventListener('click', function () {
+                var id = uid('atc');
+                fire('AddToCart', { value: randomValue() }, { eventID: id });
+            });
 
         document.getElementById('addToWishlistButton')
-            .addEventListener('click', function () { fire('AddToWishlist'); });
+            .addEventListener('click', function () {
+                var id = uid('atw');
+                fire('AddToWishlist', { value: randomValue() }, { eventID: id });
+            });
 
         document.getElementById('purchaseButton')
-            .addEventListener('click', function () { fire('Purchase', { num_items: 1 }); });
+            .addEventListener('click', function () {
+                var orderId = uid('order');
+                fire('Purchase', {
+                    num_items: 1,
+                    value: randomValue(),
+                    order_id: orderId
+                }, { eventID: orderId });
+            });
+
+        // Confirm the pixel library actually loaded (adblock check)
+        (function pollHealth(attempt) {
+            var el = document.getElementById('health');
+            if (typeof fbq === 'function' && typeof fbq.callMethod === 'function') {
+                el.textContent = '\u2705 fbevents.js loaded — events will be sent';
+                el.style.color = '#31a24c';
+            } else if (attempt > 20) {
+                el.textContent = '\u274C fbevents.js did NOT load — events are being ' +
+                                 'queued, not sent. Check adblocker / extensions.';
+                el.style.color = '#e41e3f';
+            } else {
+                setTimeout(function () { pollHealth(attempt + 1); }, 250);
+            }
+        })(0);
     </script>
 </body>
 </html>
