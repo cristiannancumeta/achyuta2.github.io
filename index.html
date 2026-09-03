@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- IMG Tag Pixel Integration -->
-    <img src="https://www.facebook.com/tr?id=48002403850441&ev=PageView&noscript=1" />
-    <title>Facebook Pixel Add to Cart with Form</title>
-    <!-- Facebook Pixel Code -->
+    <title>Meta Pixel Add to Cart Test</title>
+
+    <!-- Meta Pixel Code -->
     <script>
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -16,58 +15,65 @@
         t.src=v;s=b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t,s)}(window,document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '48002403850441', {
-            autoConfig: false,
-            em: false // Enables automatic advanced matching for email, phone, and other fields
-        }); 
+
+        fbq('init', '48002403850441');
         fbq('track', 'PageView');
     </script>
     <noscript>
         <img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=48002403850441&ev=PageView&noscript=1"/>
+             src="https://www.facebook.com/tr?id=48002403850441&ev=PageView&noscript=1" />
     </noscript>
+    <!-- End Meta Pixel Code -->
 </head>
-<body>
-    <h1>Facebook Pixel Add to Cart Test</h1>
 
-    <!-- Form to collect Name and Email -->
+<body>
+    <h1>Meta Pixel Add to Cart Test</h1>
+
     <form id="userDetailsForm">
         <label for="name">Name:</label>
-        <input type="text" id="name" name="name" placeholder="Enter your name" required><br><br>
-        
+        <input type="text" id="name" name="name" placeholder="Enter your name"><br><br>
+
         <label for="email">Email:</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" required><br><br>
+        <input type="email" id="email" name="email" placeholder="Enter your email"><br><br>
 
         <label for="phone">Phone Number:</label>
-        <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required><br><br>
+        <input type="tel" id="phone" name="phone" placeholder="Enter your phone number"><br><br>
 
         <button type="button" id="addToCartButton">Add to Cart</button>
-
         <button type="button" id="addToWishlistButton">Add to Wishlist</button>
     </form>
 
-    <!-- JavaScript to trigger the addToCart event -->
+    <p id="status" style="font-family:monospace;color:#1877f2;"></p>
+
     <script>
-        document.getElementById('addToCartButton').addEventListener('click', function() {
-            // Get the values from the form
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+        function logFired(eventName) {
+            document.getElementById('status').textContent =
+                'Fired: ' + eventName + ' at ' + new Date().toLocaleTimeString();
+            console.log('[pixel] fired', eventName);
+        }
 
-            if (!name || !email) {
-                alert('Please enter both your name and email.');
-                return;
-            }
-
-            // Trigger Facebook Pixel AddToCart event with user data
+        document.getElementById('addToCartButton').addEventListener('click', function () {
             fbq('track', 'AddToCart', {
                 content_name: 'Test Product',
                 content_category: 'Example Category',
                 content_ids: ['1234'],
                 content_type: 'product',
                 value: 50.00,
-                currency: 'USD',
-                user_name: name
+                currency: 'USD'
             });
+            logFired('AddToCart');
+        });
+
+        document.getElementById('addToWishlistButton').addEventListener('click', function () {
+            fbq('track', 'AddToWishlist', {
+                content_name: 'Test Product',
+                content_category: 'Example Category',
+                content_ids: ['1234'],
+                content_type: 'product',
+                value: 50.00,
+                currency: 'USD'
+            });
+            logFired('AddToWishlist');
         });
     </script>
 </body>
