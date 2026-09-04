@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Pixel Event Test Page</title>
+    <title>Meta Pixel Event Generator (Test Tool)</title>
 
-    <!-- Meta Pixel Code -->
+    <!-- Meta Pixel base library (loads fbevents.js; init happens later) -->
     <script>
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -15,59 +15,127 @@
         t.src=v;s=b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t,s)}(window,document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-
-        fbq('init', '28368104826211072');
-        fbq('track', 'PageView');
     </script>
-    <noscript>
-        <img height="1" width="1" style="display:none"
-             src="https://www.facebook.com/tr?id=28368104826211072&ev=PageView&noscript=1" />
-    </noscript>
-    <!-- End Meta Pixel Code -->
 
     <style>
-        body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 44rem; }
+        body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 46rem;
+               color: #1c1e21; }
+        h1 { font-size: 1.4rem; margin-bottom: .25rem; }
+        .panel { border: 1px solid #dddfe2; border-radius: 6px; padding: 1rem;
+                 margin-bottom: 1rem; background: #fff; }
+        .warning { border: 2px solid #e41e3f; border-radius: 6px; padding: 1rem;
+                   margin-bottom: 1rem; background: #fff5f6; }
+        .warning h2 { font-size: 1rem; margin: 0 0 .5rem 0; color: #b3122f; }
+        .warning ul { margin: .5rem 0 0 1.1rem; padding: 0; font-size: .9rem;
+                      line-height: 1.5; }
+        .warning code { background: #ffe8ec; padding: 0 .2rem; }
+        input[type=text] { padding: .5rem; width: 18rem; font-family: monospace; }
         button { padding: .6rem 1rem; margin: .25rem .25rem 0 0; cursor: pointer; }
+        button:disabled { opacity: .45; cursor: not-allowed; }
+        #health { font-family: monospace; font-size: .85rem; margin-top: .6rem; }
+        #active { font-family: monospace; font-weight: 600; }
+        #liveWarn { font-size: .9rem; color: #b3122f; font-weight: 600;
+                    margin-top: .5rem; display: none; }
         #log { font-family: monospace; font-size: .8rem; background: #f5f6f7;
                border: 1px solid #dddfe2; padding: .75rem; margin-top: 1rem;
                min-height: 5rem; max-height: 20rem; overflow: auto;
                white-space: pre-wrap; }
-        #health { font-family: monospace; font-size: .85rem; margin-top: .5rem; }
+        .hint { font-size: .85rem; color: #606770; }
     </style>
 </head>
 
 <body>
-    <h1>Meta Pixel Event Test Page</h1>
-    <p>Pixel ID: <code>28368104826211072</code></p>
-    <div id="health">Checking pixel library…</div>
+    <h1>Meta Pixel Event Generator</h1>
+    <p class="hint">Internal test tool &mdash; fires synthetic pixel events for
+       debugging and verification.</p>
 
-    <form id="userDetailsForm">
+    <div class="warning">
+        <h2>&#9888;&#65039; Use test pixels only &mdash; read before firing</h2>
+        <p style="margin:0;font-size:.9rem">
+            This page sends <strong>real events</strong> to whatever pixel ID you
+            enter. There is no sandbox and no undo.
+        </p>
+        <ul>
+            <li><strong>Double-check the ID.</strong> A typo or a copied
+                production ID will inject fake <code>Purchase</code> events, with
+                dollar values, into a live advertiser's dataset.</li>
+            <li><strong>Events cannot be deleted.</strong> Once received, they may
+                affect conversion reporting, attribution, campaign optimisation,
+                and custom audiences.</li>
+            <li><strong>Do not use a shared or team-owned pixel</strong> unless you
+                own it. Others may be relying on that data.</li>
+            <li><strong>Never enter real customer data</strong> in the fields
+                below. They are sent unhashed as custom parameters. Use obviously
+                fake values only.</li>
+            <li><strong>Confirm you own the pixel</strong> in Events Manager before
+                applying it here.</li>
+        </ul>
+    </div>
+
+    <div class="panel">
+        <label for="pixelInput"><strong>Pixel ID:</strong></label><br><br>
+        <input type="text" id="pixelInput" placeholder="e.g. 48002403850441"
+               inputmode="numeric" autocomplete="off">
+        <button type="button" id="applyButton">Apply &amp; reload</button>
+        <button type="button" id="clearButton">Clear</button>
+        <div id="health">No pixel applied yet.</div>
+        <div class="hint" style="margin-top:.5rem">
+            Active pixel: <span id="active">none</span> &mdash;
+            <span id="shareHint"></span>
+        </div>
+        <div id="liveWarn">
+            &#9888;&#65039; Events are LIVE and going to the pixel above.
+            Every click below is real and permanent.
+        </div>
+    </div>
+
+    <div class="panel">
+        <strong>Optional test data</strong>
+        <span class="hint">(fake values only &mdash; sent unhashed as custom
+        params)</span><br><br>
         <label for="name">Name:</label>
-        <input type="text" id="name" name="name" placeholder="Enter your name"><br><br>
-
+        <input type="text" id="name" placeholder="e.g. Test User"><br><br>
         <label for="email">Email:</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email"><br><br>
+        <input type="text" id="email" placeholder="e.g. test@example.com"><br><br>
 
-        <label for="phone">Phone Number:</label>
-        <input type="tel" id="phone" name="phone" placeholder="Enter your phone number"><br><br>
+        <button type="button" id="pageViewButton"   disabled>PageView</button>
+        <button type="button" id="viewContentButton" disabled>ViewContent</button>
+        <button type="button" id="addToCartButton"  disabled>Add to Cart</button>
+        <button type="button" id="addToWishlistButton" disabled>Add to Wishlist</button>
+        <button type="button" id="initiateCheckoutButton" disabled>InitiateCheckout</button>
+        <button type="button" id="purchaseButton"   disabled>Purchase</button>
+        <button type="button" id="leadButton"       disabled>Lead</button>
+    </div>
 
-        <button type="button" id="addToCartButton">Add to Cart</button>
-        <button type="button" id="addToWishlistButton">Add to Wishlist</button>
-        <button type="button" id="purchaseButton">Purchase</button>
-    </form>
-
-    <div id="log">Waiting for events…</div>
+    <div id="log">Waiting for events&hellip;</div>
 
     <script>
-        var logEl = document.getElementById('log');
+    (function () {
         var NL = String.fromCharCode(10);
+        var logEl    = document.getElementById('log');
+        var healthEl = document.getElementById('health');
+        var activeEl = document.getElementById('active');
+        var shareEl  = document.getElementById('shareHint');
+        var inputEl  = document.getElementById('pixelInput');
+        var liveWarn = document.getElementById('liveWarn');
+        var STORAGE_KEY = 'testPixelId';
+        var activePixel = null;
 
-        function logFired(eventName, params, opts) {
-            var line = new Date().toLocaleTimeString() + '  ' + eventName +
-                       (opts && opts.eventID ? '  [eventID ' + opts.eventID + ']' : '') +
-                       NL + '    ' + JSON.stringify(params);
+        function readPixelId() {
+            var fromUrl = new URLSearchParams(window.location.search).get('pixel');
+            if (fromUrl && /^[0-9]{5,}$/.test(fromUrl)) { return fromUrl; }
+            try {
+                var stored = window.localStorage.getItem(STORAGE_KEY);
+                if (stored && /^[0-9]{5,}$/.test(stored)) { return stored; }
+            } catch (e) {}
+            return null;
+        }
+
+        function log(msg, detail) {
+            var line = new Date().toLocaleTimeString() + '  ' + msg +
+                       (detail ? NL + '    ' + detail : '');
             logEl.textContent = line + NL + logEl.textContent;
-            console.log('[pixel]', eventName, params, opts || '');
+            console.log('[pixel]', msg, detail || '');
         }
 
         function uid(prefix) {
@@ -79,60 +147,119 @@
             return Math.round((10 + Math.random() * 90) * 100) / 100;
         }
 
-        var baseParams = {
-            content_name: 'Test Product',
-            content_category: 'Example Category',
-            content_ids: ['1234'],
-            content_type: 'product',
-            currency: 'USD'
-        };
+        var EVENTS = [
+            ['pageViewButton',         'PageView',         'pv'],
+            ['viewContentButton',      'ViewContent',      'vc'],
+            ['addToCartButton',        'AddToCart',        'atc'],
+            ['addToWishlistButton',    'AddToWishlist',    'atw'],
+            ['initiateCheckoutButton', 'InitiateCheckout', 'ic'],
+            ['purchaseButton',         'Purchase',         'order'],
+            ['leadButton',             'Lead',             'lead']
+        ];
 
-        function fire(eventName, extra, opts) {
-            var params = Object.assign({}, baseParams, extra || {});
-            if (opts) {
-                fbq('track', eventName, params, opts);
-            } else {
-                fbq('track', eventName, params);
-            }
-            logFired(eventName, params, opts);
+        function baseParams() {
+            return {
+                content_name: 'Test Product',
+                content_category: 'Example Category',
+                content_ids: ['1234'],
+                content_type: 'product',
+                currency: 'USD'
+            };
         }
 
-        document.getElementById('addToCartButton')
-            .addEventListener('click', function () {
-                var id = uid('atc');
-                fire('AddToCart', { value: randomValue() }, { eventID: id });
-            });
+        function fire(eventName, prefix) {
+            if (!activePixel) { log('No pixel applied - nothing sent'); return; }
+            var id = uid(prefix);
+            var params = baseParams();
 
-        document.getElementById('addToWishlistButton')
-            .addEventListener('click', function () {
-                var id = uid('atw');
-                fire('AddToWishlist', { value: randomValue() }, { eventID: id });
-            });
-
-        document.getElementById('purchaseButton')
-            .addEventListener('click', function () {
-                var orderId = uid('order');
-                fire('Purchase', {
-                    num_items: 1,
-                    value: randomValue(),
-                    order_id: orderId
-                }, { eventID: orderId });
-            });
-
-        // Confirm the pixel library actually loaded (adblock check)
-        (function pollHealth(attempt) {
-            var el = document.getElementById('health');
-            if (typeof fbq === 'function' && typeof fbq.callMethod === 'function') {
-                el.textContent = '\u2705 fbevents.js loaded — events will be sent';
-                el.style.color = '#31a24c';
-            } else if (attempt > 20) {
-                el.textContent = '\u274C fbevents.js did NOT load — events are being ' +
-                                 'queued, not sent. Check adblocker / extensions.';
-                el.style.color = '#e41e3f';
+            if (eventName === 'PageView') {
+                params = {};
             } else {
-                setTimeout(function () { pollHealth(attempt + 1); }, 250);
+                params.value = randomValue();
+                if (eventName === 'Purchase') {
+                    params.num_items = 1;
+                    params.order_id = id;
+                }
+            }
+
+            var name  = document.getElementById('name').value;
+            var email = document.getElementById('email').value;
+            if (name)  { params.test_name  = name; }
+            if (email) { params.test_email = email; }
+
+            fbq('track', eventName, params, { eventID: id });
+            log(eventName + ' -> pixel ' + activePixel + '  [eventID ' + id + ']',
+                JSON.stringify(params));
+        }
+
+        EVENTS.forEach(function (row) {
+            document.getElementById(row[0]).addEventListener('click', function () {
+                fire(row[1], row[2]);
+            });
+        });
+
+        function setButtonsEnabled(on) {
+            EVENTS.forEach(function (row) {
+                document.getElementById(row[0]).disabled = !on;
+            });
+        }
+
+        document.getElementById('applyButton').addEventListener('click', function () {
+            var val = inputEl.value.replace(/[^0-9]/g, '');
+            if (!/^[0-9]{5,}$/.test(val)) {
+                alert('Enter a numeric pixel ID (at least 5 digits).');
+                return;
+            }
+            var msg = 'Send REAL test events to pixel:' + NL + NL +
+                      '    ' + val + NL + NL +
+                      'Events cannot be deleted and may affect reporting, ' +
+                      'attribution and optimisation for this dataset.' + NL + NL +
+                      'Only continue if you own this pixel and it is a TEST pixel.';
+            if (!window.confirm(msg)) {
+                log('Apply cancelled for pixel ' + val);
+                return;
+            }
+            try { window.localStorage.setItem(STORAGE_KEY, val); } catch (e) {}
+            window.location.search = '?pixel=' + val;
+        });
+
+        document.getElementById('clearButton').addEventListener('click', function () {
+            try { window.localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            window.location.search = '';
+        });
+
+        activePixel = readPixelId();
+        if (activePixel) {
+            inputEl.value = activePixel;
+            activeEl.textContent = activePixel;
+            liveWarn.style.display = 'block';
+            fbq('init', activePixel);
+            fbq('track', 'PageView', {}, { eventID: uid('pv') });
+            log('Initialised pixel ' + activePixel + ' and sent PageView');
+
+            var url = window.location.origin + window.location.pathname +
+                      '?pixel=' + activePixel;
+            shareEl.innerHTML = 'shareable link: <code>' + url + '</code>';
+            setButtonsEnabled(true);
+        } else {
+            activeEl.textContent = 'none';
+            shareEl.textContent = 'apply a pixel ID to enable the buttons';
+        }
+
+        (function poll(attempt) {
+            if (typeof fbq === 'function' && typeof fbq.callMethod === 'function') {
+                healthEl.textContent = '\u2705 fbevents.js loaded' +
+                    (activePixel ? ' - events are being sent' : ' - waiting for a pixel ID');
+                healthEl.style.color = '#31a24c';
+            } else if (attempt > 20) {
+                healthEl.textContent = '\u274C fbevents.js did NOT load. Events are ' +
+                    'queued in memory, NOT sent. Disable your adblocker and reload.';
+                healthEl.style.color = '#e41e3f';
+            } else {
+                setTimeout(function () { poll(attempt + 1); }, 250);
             }
         })(0);
+    })();
     </script>
 </body>
 </html>
